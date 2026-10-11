@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitness Tracker</title>
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--text:#1f2430;--muted:#6b7280;--accent:#4f46e5;--on-accent:#fff;--border:#e3e5ee;--track:#e8eaf3;--danger:#dc2626;--c1:#4f46e5;--c2:#f59e0b;--c3:#10b981}
+@media (prefers-color-scheme:dark){:root{--bg:#12141b;--card:#1c1f2a;--text:#eef0f6;--muted:#9aa0b0;--accent:#818cf8;--on-accent:#12141b;--border:#2d3140;--track:#2a2e3d;--danger:#f87171;--c1:#818cf8;--c2:#fbbf24;--c3:#34d399}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 14px;display:flex;justify-content:center}
+.app{width:100%;max-width:640px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{font-size:1.05rem;margin:0 0 14px}
+.prog{margin-bottom:14px}
+.prog .top{display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:5px}
+.prog .top span:last-child{color:var(--muted)}
+.track{height:10px;background:var(--track);border-radius:5px;overflow:hidden}
+.fill{height:100%;border-radius:5px;transition:width .3s}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:3px}
+input,select{width:100%;font:inherit;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px}
+button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600;width:100%;margin-top:12px;padding:11px}
+.err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+.seg{display:flex;gap:6px;margin-bottom:14px}
+.seg button{flex:1;padding:7px;font-size:.85rem}
+.seg button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:18px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bar{width:100%;max-width:38px;border-radius:6px 6px 0 0;min-height:2px;transition:height .3s}
+.val{font-size:.7rem;color:var(--muted);margin-bottom:3px}
+.day{font-size:.75rem;color:var(--muted);margin-top:5px}
+.total{margin-top:12px;font-size:.9rem;color:var(--muted)}
+.item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px}
+.item:last-child{border-bottom:none}
+.item .t{font-weight:600;font-size:.95rem}
+.item .d{font-size:.8rem;color:var(--muted)}
+.item button{color:var(--danger);padding:5px 10px;font-size:.8rem}
+.empty{color:var(--muted);font-size:.9rem}
+details summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.goals{margin-top:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🏃 Fitness Tracker</h1>
+  <p class="sub">Log your activity and watch your progress.</p>
+
+  <div class="card">
+    <h2>Today's Progress</h2>
+    <div id="today"></div>
+    <details>
+      <summary>Edit daily goals</summary>
+      <div class="grid goals">
+        <div><label for="gSteps">Steps</label><input id="gSteps" type="number" min="1"></div>
+        <div><label for="gCal">Calories</label><input id="gCal" type="number" min="1"></div>
+        <div><label for="gMins">Workout minutes</label><input id="gMins" type="number" min="1"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Last 7 Days</h2>
+    <div class="seg" id="seg">
+      <button data-m="steps" class="on">Steps</button>
+      <button data-m="cal">Calories</button>
+      <button data-m="mins">Minutes</button>
+    </div>
+    <div class="chart" id="chart"></div>
+    <div class="total" id="weekTotal"></div>
+  </div>
+
+  <div class="card">
+    <h2>Log Activity</h2>
+    <div class="grid">
+      <div><label for="date">Date</label><input id="date" type="date"></div>
+      <div><label for="type">Exercise type</label>
+        <select id="type">
+          <option>Walking</option><option>Running</option><option>Cycling</option>
+          <option>Gym</option><option>Yoga</option><option>Swimming</option><option>Other</option>
+        </select></div>
+      <div><label for="mins">Workout time (min)</label><input id="mins" type="number" min="0" placeholder="30"></div>
+      <div><label for="cal">Calories burned</label><input id="cal" type="number" min="0" placeholder="200"></div>
+      <div><label for="steps">Steps</label><input id="steps" type="number" min="0" placeholder="4000"></div>
+    </div>
+    <div class="err" id="err"></div>
+    <button class="primary" id="add">Add Entry</button>
+  </div>
+
+  <div class="card">
+    <h2>History</h2>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+const KEY = "fitness_v1", GKEY = "fitness_goals_v1";
+const $ = id => document.getElementById(id);
+const NAMES = {steps:"Steps", cal:"Calories", mins:"Minutes"};
+const COLORS = {steps:"var(--c1)", cal:"var(--c2)", mins:"var(--c3)"};
+let logs = [], goals = {steps:10000, cal:500, mins:30}, metric = "steps";
+
+function read(k, fallback){ try{ const r = localStorage.getItem(k); if(r){ const p = JSON.parse(r); if(p) return p; } }catch(e){} return fallback; }
+function write(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function sumFor(date, m){ return logs.filter(l => l.date === date).reduce((s,l) => s + (l[m]||0), 0); }
+function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+
+function renderToday(){
+  const box = $("today"), today = ymd(new Date());
+  box.innerHTML = "";
+  ["steps","cal","mins"].forEach(m => {
+    const v = sumFor(today, m), g = goals[m], pct = Math.min(100, v/g*100);
+    const p = el("div","prog"), top = el("div","top");
+    top.append(el("span","",NAMES[m]), el("span","", v.toLocaleString()+" / "+g.toLocaleString()));
+    const tr = el("div","track"), f = el("div","fill");
+    f.style.width = pct+"%"; f.style.background = COLORS[m];
+    tr.append(f); p.append(top, tr); box.append(p);
+  });
+}
+
+function renderChart(){
+  const chart = $("chart"); chart.innerHTML = "";
+  const days = [];
+  for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); days.push(d); }
+  const vals = days.map(d => sumFor(ymd(d), metric));
+  const max = Math.max(...vals, 1);
+  days.forEach((d,i) => {
+    const col = el("div","col");
+    const bar = el("div","bar"); bar.style.height = (vals[i]/max*100)+"%"; bar.style.background = COLORS[metric];
+    col.append(el("div","val", vals[i] ? vals[i].toLocaleString() : ""), bar, el("div","day", d.toLocaleDateString(undefined,{weekday:"short"})));
+    chart.append(col);
+  });
+  const total = vals.reduce((a,b)=>a+b,0);
+  $("weekTotal").textContent = "Weekly total: "+total.toLocaleString()+" "+NAMES[metric].toLowerCase()+"  ·  Daily average: "+Math.round(total/7).toLocaleString();
+}
+
+function renderList(){
+  const list = $("list"); list.innerHTML = "";
+  if(!logs.length){ list.append(el("div","empty","No activity logged yet. Add your first entry above.")); return; }
+  logs.slice().sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id).slice(0,15).forEach(l => {
+    const row = el("div","item"), info = el("div");
+    info.append(el("div","t", l.type), el("div","d", `${l.date} · ${l.mins} min · ${l.cal} kcal · ${l.steps.toLocaleString()} steps`));
+    const del = el("button","","Delete");
+    del.onclick = () => { logs = logs.filter(x => x.id !== l.id); write(KEY, logs); renderAll(); };
+    row.append(info, del); list.append(row);
+  });
+}
+
+function renderAll(){ renderToday(); renderChart(); renderList(); }
+
+$("add").onclick = () => {
+  const mins = +$("mins").value || 0, cal = +$("cal").value || 0, steps = +$("steps").value || 0, date = $("date").value;
+  if(!date){ $("err").textContent = "Please choose a date."; return; }
+  if(mins < 0 || cal < 0 || steps < 0 || (mins + cal + steps) === 0){ $("err").textContent = "Enter at least one value (minutes, calories or steps)."; return; }
+  logs.push({id: Date.now(), date, type: $("type").value, mins, cal, steps});
+  write(KEY, logs); $("err").textContent = "";
+  $("mins").value = $("cal").value = $("steps").value = "";
+  renderAll();
+};
+
+$("seg").onclick = e => {
+  const b = e.target.closest("button"); if(!b) return;
+  metric = b.dataset.m;
+  document.querySelectorAll("#seg button").forEach(x => x.classList.toggle("on", x === b));
+  renderChart();
+};
+
+[["gSteps","steps"],["gCal","cal"],["gMins","mins"]].forEach(([id,k]) => {
+  $(id).value = goals[k];
+  $(id).onchange = () => { const v = +$(id).value; if(v > 0){ goals[k] = v; write(GKEY, goals); } else $(id).value = goals[k]; renderToday(); };
+});
+
+logs = read(KEY, []);
+goals = Object.assign(goals, read(GKEY, {}));
+["gSteps","gCal","gMins"].forEach((id,i) => $(id).value = goals[["steps","cal","mins"][i]]);
+$("date").value = ymd(new Date());
+renderAll();
+</script>
+</body>
+</html>
